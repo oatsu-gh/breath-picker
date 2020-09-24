@@ -10,7 +10,7 @@ from glob import glob
 
 from pydub import AudioSegment
 
-from utaupy import label as _label
+import utaupy
 
 TARGET_PHONEME = 'br'
 
@@ -52,11 +52,11 @@ def main():
 
 def extract_label(labfile, target_phoneme):
     """切り出したい音素のみのラベルを返す(単位は100ns)"""
-    label_values = _label.load(labfile).values
+    label = utaupy.label.load(labfile)
 
     l = []  # [[音素, 開始時刻, 終了時刻], [], ...]
-    for v in label_values:
-        if v[2] == target_phoneme:
+    for v in label:
+        if v.symbol == target_phoneme:
             l.append(v)
     return l
 
@@ -73,11 +73,11 @@ def cutout_wav(wavfile, l, dirname):
     # ミリ秒で区間指定して抽出
     for i, v in enumerate(l):
         # 100ns(10^-7)をms(10^-3)に変換
-        t_start = int(v[0] // 10000)
-        t_end = int(v[1] // 10000)
+        t_start = int(v.start // 10000)
+        t_end = int(v.end // 10000)
         # 出力パスを設定
         # './out/(任意文字列)/(音素)_(元の名前)_000001.wav'
-        outpath = f'./out/{dirname}/{v[2]}_{songname}_{(i+1):06}.wav'
+        outpath = f'./out/{dirname}/{v.symbol}_{songname}_{(i+1):06}.wav'
         # '(出力パス)tab(音声の長さ)'
         print(f'    {outpath}\t{t_end - t_start}ms')
         # 指定音素区間を切り出し
